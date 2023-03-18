@@ -1,6 +1,7 @@
 #Librerías generales
 import sys, re, os
 from PyQt5 import QtCore, QtGui, QtWidgets  #Módulos de PyQt5 que usaremos para la GUI
+from difflib import SequenceMatcher
 #Indicar algunos módulos de la librería para tener un código más versátil
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QVBoxLayout, QTableWidget, QLabel, QLineEdit, QComboBox, QTableWidgetItem, QAbstractItemView,QMessageBox, QMenu, QAction 
 from PyQt5.QtCore import QRect, Qt, QUrl
@@ -261,7 +262,11 @@ class WindowSearch(QDialog):
         channelName=self.inputChannel.text()#Obtenemos el nombre ingresado
         found=True
         for indexChannel in range(len(channelList)):
-            if (channelList[indexChannel][0]==channelName):
+            #Comparamos las cadenas con el nombre del canal (no sin antes pasarlas a minúsculas con .lower()), esto gracias a una clase de la librería difflib que compara pares de secuencia de entrada
+            matcher=SequenceMatcher(None, channelList[indexChannel][0].lower(), channelName.lower()) #Devuelve un valor de semejanza entre 0 y 1, donde 1 significa una coincidencia exacta
+            similarity = matcher.ratio() #Calcular la relación de similitud
+            print(str(channelList[indexChannel][0].lower())+str(channelName.lower())+str(similarity))
+            if similarity >= 0.7: #Si está por encima del umbral (threshold)
                 found=False
                 channelFound=[channelList[indexChannel]]
                 window.tableWidget.setRowCount(0) #Limpiar tabla
