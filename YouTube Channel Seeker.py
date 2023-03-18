@@ -3,7 +3,7 @@ import sys, re, os
 from PyQt5 import QtCore, QtGui, QtWidgets  #Módulos de PyQt5 que usaremos para la GUI
 #Indicar algunos módulos de la librería para tener un código más versátil
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QVBoxLayout, QTableWidget, QLabel, QLineEdit, QComboBox, QTableWidgetItem, QAbstractItemView,QMessageBox, QMenu, QAction 
-from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtCore import QRect, Qt, QUrl
 from PyQt5.QtGui import QDesktopServices
 
 current_dir = os.getcwd() # Obtener la ruta de la carpeta actual
@@ -86,8 +86,18 @@ class Window(QMainWindow):
 
         #El botón de añadir
         self.addRowButton = QPushButton('Add channel', self.centralWidget)
-        self.addRowButton.setGeometry(QtCore.QRect(50, 20, 100, 30))
+        self.addRowButton.setGeometry(QRect(50, 20, 130, 30))
         self.addRowButton.clicked.connect(self.showWindowAdd)
+
+        #El botón de buscar
+        self.addRowButton = QPushButton('Search channel', self.centralWidget)
+        self.addRowButton.setGeometry(QRect(200, 20, 160, 30))
+        self.addRowButton.clicked.connect(self.showWindowSearch)
+
+        #El botón de filtrar
+        self.addRowButton = QPushButton('Filter by category', self.centralWidget)
+        self.addRowButton.setGeometry(QRect(380, 20, 160, 30))
+        self.addRowButton.clicked.connect(self.showWindowSearch)
     
     #Funcion del doble click para que abra el link del canal
     def open_link(self, row, column):
@@ -120,11 +130,16 @@ class Window(QMainWindow):
     
     #Borrar canal si se confirma la acción
     def handle_confirm_action(self, button):
-        row=self.tableWidget.currentIndex().row()
+        indexChannel=0 #Indice del canal dentro de la lista 
         selected_row=self.tableWidget.currentRow()
+        for indexChnnl in range(len(channelList)):
+            first_cell = self.tableWidget.item(selected_row, 0)
+            channelName=first_cell.text()
+            if (channelList[indexChnnl][0]==channelName):
+                indexChannel=indexChnnl
         if button.text()=="&Yes":
             self.tableWidget.removeRow(selected_row)
-            channelList.pop(row)
+            channelList.pop(indexChannel)
             overrideTxt()
         elif button.text()=="&No":
             pass #Acción cancelada
@@ -146,6 +161,16 @@ class Window(QMainWindow):
     def showWindowAdd(self):
         self.secondary_window = WindowAdd()
         self.secondary_window.exec_()
+
+    #Mostrar ventana buscar
+    def showWindowSearch(self):
+        self.secondary_window = WindowSearch()
+        self.secondary_window.exec_()
+    
+    #Mostrar ventana buscar
+    def showWindowFilter(self):
+        self.secondary_window = WindowFilter()
+        self.secondary_window.exec_()
         
 #Clase de la ventana para añadir canal
 class WindowAdd(QDialog):
@@ -157,6 +182,7 @@ class WindowAdd(QDialog):
         self.setGeometry(100, 100, 600, 300)
         self.setFixedSize(600, 300)
         self.move(300, 200)
+        self.setWindowIcon(QtGui.QIcon('img/fortilogo.png'))
         
         #Widgets de la ventana
         labelChannel = QLabel("Channel name:")
@@ -180,7 +206,7 @@ class WindowAdd(QDialog):
         layout.addWidget(boton)
         self.setLayout(layout) #Establecer layout en la ventana
     
-    #Método para añadir funcionalidad al botón
+    #Método para añadir funcionalidad al botón de añadir
     def addRow(self):
         #Obtenemos los datos de los widgets
         channel=self.inputChannel.text()
@@ -202,7 +228,97 @@ class WindowAdd(QDialog):
             msgBox.setGeometry(350, 350, 0, 0)
             msgBox.setText('The link must be from youtube.com. It should start like this:\n"https://www.youtube.com/"')
             msgBox.setStandardButtons(QMessageBox.Close)
-            msgBox.setWindowModality(QtCore.Qt.ApplicationModal)
+            msgBox.setWindowModality(Qt.ApplicationModal)
+            msgBox.exec_()
+
+#Clase de la ventana para buscar canal
+class WindowSearch(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        #Configuración de la ventana
+        self.setWindowTitle('Search channel')
+        self.setGeometry(350, 250, 400, 150)
+        self.setFixedSize(400, 150)
+        self.move(350, 250)
+        self.setWindowIcon(QtGui.QIcon('img/fortilogo.png'))
+        
+        #Widgets de la ventana
+        labelChannel = QLabel("What's the channel name that you want to search?")
+        self.inputChannel = QLineEdit()
+        boton = QPushButton("Search", self)
+        boton.clicked.connect(self.searchRow)
+
+        # Agregamos los widgets al layout vertical (diseño vertical)
+        layout = QVBoxLayout()
+        layout.addWidget(labelChannel)
+        layout.addWidget(self.inputChannel)
+        layout.addWidget(boton)
+        self.setLayout(layout) #Establecer layout en la ventana
+    
+    #Método para añadir funcionalidad al botón de buscar
+    def searchRow(self):
+        channelName=self.inputChannel.text()#Obtenemos el nombre ingresado
+        found=True
+        for indexChannel in range(len(channelList)):
+            if (channelList[indexChannel][0]==channelName):
+                found=False
+                channelFound=[channelList[indexChannel]]
+                window.tableWidget.setRowCount(0) #Limpiar tabla
+                window.fillTable(channelFound) #Poner en la tabla el canal
+                self.close()
+        if(found):
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setGeometry(350, 350, 0, 0)
+            msgBox.setText("The channel doesn't exist")
+            msgBox.setStandardButtons(QMessageBox.Close)
+            msgBox.setWindowModality(Qt.ApplicationModal)
+            msgBox.exec_()
+
+#Clase de la ventana para filtrar por categoría
+class WindowFilter(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        #Configuración de la ventana
+        self.setWindowTitle('Filter by channel category')
+        self.setGeometry(350, 250, 400, 150)
+        self.setFixedSize(400, 150)
+        self.move(350, 250)
+        self.setWindowIcon(QtGui.QIcon('img/fortilogo.png'))
+        
+        #Widgets de la ventana
+        labelChannel = QLabel("What's the channel name that you want to search?")
+        self.inputChannel = QLineEdit()
+        boton = QPushButton("Search", self)
+        boton.clicked.connect(self.searchRow)
+
+        # Agregamos los widgets al layout vertical (diseño vertical)
+        layout = QVBoxLayout()
+        layout.addWidget(labelChannel)
+        layout.addWidget(self.inputChannel)
+        layout.addWidget(boton)
+        self.setLayout(layout) #Establecer layout en la ventana
+    
+    #Método para añadir funcionalidad al botón
+    def searchRow(self):
+        channelName=self.inputChannel.text()#Obtenemos el nombre ingresado
+        found=True
+        for indexChannel in range(len(channelList)):
+            if (channelList[indexChannel][0]==channelName):
+                found=False
+                channelFound=[channelList[indexChannel]]
+                window.tableWidget.setRowCount(0) #Limpiar tabla
+                window.fillTable(channelFound) #Poner en la tabla el canal
+                self.close()
+        if(found):
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setGeometry(350, 350, 0, 0)
+            msgBox.setText("The channel doesn't exist")
+            msgBox.setStandardButtons(QMessageBox.Close)
+            msgBox.setWindowModality(Qt.ApplicationModal)
             msgBox.exec_()
 
 #Estas 4 líneas hacen posible que se ejecute y muestre la ventana
