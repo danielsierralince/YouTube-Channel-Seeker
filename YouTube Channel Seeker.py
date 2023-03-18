@@ -1,9 +1,10 @@
 #Librerías generales
 import sys, re, os
-from PyQt5 import QtCore, QtGui, QtWidgets #Módulos de PyQt5 que usaremos para la GUI
+from PyQt5 import QtCore, QtGui, QtWidgets  #Módulos de PyQt5 que usaremos para la GUI
 #Indicar algunos módulos de la librería para tener un código más versátil
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QVBoxLayout, QTableWidget, QLabel, QLineEdit, QComboBox, QTableWidgetItem, QAbstractItemView,QMessageBox, QMenu, QAction 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtGui import QDesktopServices
 
 current_dir = os.getcwd() # Obtener la ruta de la carpeta actual
 os.chdir(current_dir) # Cambiar al directorio actual
@@ -77,6 +78,9 @@ class Window(QMainWindow):
         #Al establecer "CustomContextMenu", se habilita la función "customContextMenuRequested"
         self.customContextMenuRequested.connect(self.show_context_menu) #Se dispara cuando se hace clic derecho en el widget
 
+        #Habilitamos la señal emitida al hacer doble clic en la tabla a la funcion open_link
+        self.tableWidget.cellDoubleClicked.connect(self.open_link)
+
         #FortiLogo
         self.setWindowIcon(QtGui.QIcon('img/fortilogo.png'))
 
@@ -84,6 +88,14 @@ class Window(QMainWindow):
         self.addRowButton = QPushButton('Add channel', self.centralWidget)
         self.addRowButton.setGeometry(QtCore.QRect(50, 20, 100, 30))
         self.addRowButton.clicked.connect(self.showWindowAdd)
+    
+    #Funcion del doble click para que abra el link del canal
+    def open_link(self, row, column):
+        # Obtener el enlace de la celda seleccionada
+        if column==1:
+            link=self.tableWidget.item(row, column).text()
+            # Abrir el enlace en un navegador
+            QDesktopServices.openUrl(QUrl(link))
     
     #Crear y mostrar menú contextual personalizado
     def show_context_menu(self, pos):
@@ -93,10 +105,29 @@ class Window(QMainWindow):
         tablesMenu.addAction(deleteAction)
         tablesMenu.exec_(self.mapToGlobal(pos)) #Mostrar el menú en la ubicación actual del cursor del ratón (Mapea 'pos')
 
-    #Accion del botón de borrar
+    #Accion del botón de borrar (primero muestra una ventana de confirmación)
     def on_buttonDelete_clicked(self):
-        row = self.tableWidget.currentIndex().row() #Obtener el número de la fila (.row), dado por el índice de la fila seleccionada (.currentIndex)
-        print('DELETE! '+str(row))
+        row=self.tableWidget.currentIndex().row() #Obtener el número de la fila (.row), dado por el índice de la fila seleccionada (.currentIndex)
+        
+        messageBox = QMessageBox(self)
+        messageBox.setIcon(QMessageBox.Question)
+        messageBox.setText("¿Are you sure that you want delete this channel?\nChannel name: "+channelList[row][0])
+        messageBox.setWindowTitle("Action confirmation")
+        messageBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        messageBox.setDefaultButton(QMessageBox.No)
+        messageBox.buttonClicked.connect(self.handle_confirm_action)
+        messageBox.exec_()
+    
+    #Borrar canal si se confirma la acción
+    def handle_confirm_action(self, button):
+        row=self.tableWidget.currentIndex().row()
+        selected_row=self.tableWidget.currentRow()
+        if button.text()=="&Yes":
+            self.tableWidget.removeRow(selected_row)
+            channelList.pop(row)
+            overrideTxt()
+        elif button.text()=="&No":
+            pass #Acción cancelada
 
     #Llenar la tabla
     def fillTable(self, list):
