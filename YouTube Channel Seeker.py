@@ -98,7 +98,7 @@ class Window(QMainWindow):
         #El botón de filtrar
         self.addRowButton = QPushButton('Filter by category', self.centralWidget)
         self.addRowButton.setGeometry(QRect(380, 20, 160, 30))
-        self.addRowButton.clicked.connect(self.showWindowSearch)
+        self.addRowButton.clicked.connect(self.showWindowFilter)
     
     #Funcion del doble click para que abra el link del canal
     def open_link(self, row, column):
@@ -265,7 +265,6 @@ class WindowSearch(QDialog):
             #Comparamos las cadenas con el nombre del canal (no sin antes pasarlas a minúsculas con .lower()), esto gracias a una clase de la librería difflib que compara pares de secuencia de entrada
             matcher=SequenceMatcher(None, channelList[indexChannel][0].lower(), channelName.lower()) #Devuelve un valor de semejanza entre 0 y 1, donde 1 significa una coincidencia exacta
             similarity = matcher.ratio() #Calcular la relación de similitud
-            print(str(channelList[indexChannel][0].lower())+str(channelName.lower())+str(similarity))
             if similarity >= 0.7: #Si está por encima del umbral (threshold)
                 found=False
                 channelFound=[channelList[indexChannel]]
@@ -288,43 +287,43 @@ class WindowFilter(QDialog):
 
         #Configuración de la ventana
         self.setWindowTitle('Filter by channel category')
-        self.setGeometry(350, 250, 400, 150)
-        self.setFixedSize(400, 150)
+        #self.setGeometry(350, 250, 400, 120)
+        self.setFixedSize(400, 120)
         self.move(350, 250)
         self.setWindowIcon(QtGui.QIcon('img/fortilogo.png'))
         
+        #Vamos a tener una nueva lista con las categorías actualmente disponibles en la tabla
+        currentCategoryList=[]
+        for channel in channelList:
+            if channel[2] in currentCategoryList: #Para no repetir categorías
+                continue
+            currentCategoryList.append(channel[2])
+
         #Widgets de la ventana
-        labelChannel = QLabel("What's the channel name that you want to search?")
-        self.inputChannel = QLineEdit()
-        boton = QPushButton("Search", self)
-        boton.clicked.connect(self.searchRow)
+        labelCategory = QLabel("Filter by:")
+        self.comboCategory = QComboBox()
+        self.comboCategory.addItems(currentCategoryList)
+        boton = QPushButton("Filter", self)
+        boton.clicked.connect(self.filterCategory)
 
         # Agregamos los widgets al layout vertical (diseño vertical)
         layout = QVBoxLayout()
-        layout.addWidget(labelChannel)
-        layout.addWidget(self.inputChannel)
+        layout.addWidget(labelCategory)
+        layout.addWidget(self.comboCategory)
         layout.addWidget(boton)
         self.setLayout(layout) #Establecer layout en la ventana
     
-    #Método para añadir funcionalidad al botón
-    def searchRow(self):
-        channelName=self.inputChannel.text()#Obtenemos el nombre ingresado
-        found=True
+    #Método para añadir funcionalidad al botón de filtrar
+    def filterCategory(self):
+        channelCategory=self.comboCategory.currentText() #Obtenemos categoría
+        filtredList=[]
         for indexChannel in range(len(channelList)):
-            if (channelList[indexChannel][0]==channelName):
-                found=False
-                channelFound=[channelList[indexChannel]]
+            if (channelList[indexChannel][2]==channelCategory):
+                channelMatched=channelList[indexChannel]
+                filtredList.append(channelMatched)
                 window.tableWidget.setRowCount(0) #Limpiar tabla
-                window.fillTable(channelFound) #Poner en la tabla el canal
+                window.fillTable(filtredList) #Poner en la tabla el canal
                 self.close()
-        if(found):
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setGeometry(350, 350, 0, 0)
-            msgBox.setText("The channel doesn't exist")
-            msgBox.setStandardButtons(QMessageBox.Close)
-            msgBox.setWindowModality(Qt.ApplicationModal)
-            msgBox.exec_()
 
 #Estas 4 líneas hacen posible que se ejecute y muestre la ventana
 if __name__ == '__main__': #variable "name" establecida como "main" (línea no obligatoria)
