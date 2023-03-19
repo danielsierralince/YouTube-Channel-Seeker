@@ -24,3 +24,7 @@ v0.1.9: Category filter implementation finished
 v0.1.9: Added the ability to fill the table again, useful after a search or filter
 v0.1.9: Focuses are set on required text inputs
 -xxx-
+v0.2.0: Added temporary texts to indicate the format or type of information the user is expected to enter by setting placeholder on text inputs
+v0.2.0: Added a second action when right-clicking a channel to allow editing, a window opens that auto-completes with current data
+v0.2.0: It is validated that the URL to be added or edited is not repeated
+-xxx-
