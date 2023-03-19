@@ -119,7 +119,10 @@ class Window(QMainWindow):
         tablesMenu=QMenu(self) #Menú desplegable
         deleteAction=QAction('Delete', self)
         deleteAction.triggered.connect(lambda: self.on_buttonDelete_clicked())
+        editAction=QAction('Edit', self)
+        editAction.triggered.connect(lambda: self.on_buttonEdit_clicked())
         tablesMenu.addAction(deleteAction)
+        tablesMenu.addAction(editAction)
         tablesMenu.exec_(self.mapToGlobal(pos)) #Mostrar el menú en la ubicación actual del cursor del ratón (Mapea 'pos')
 
     #Accion del botón de borrar (primero muestra una ventana de confirmación)
@@ -150,6 +153,19 @@ class Window(QMainWindow):
             overrideTxt()
         elif button.text()=="&No":
             pass #Acción cancelada
+    
+    #Accion del botón de editar
+    def on_buttonEdit_clicked(self):
+        indexChannel=0 #Indice del canal dentro de la lista 
+        selected_row=self.tableWidget.currentRow()
+        for indexChnnl in range(len(channelList)):
+            second_cell = self.tableWidget.item(selected_row, 1)
+            channelName=second_cell.text()
+            if (channelList[indexChnnl][1]==channelName): #Compara por URL, ya que esta no se puede repetir
+                indexChannel=indexChnnl
+
+        self.secondary_window = WindowEdit(indexChannel)
+        self.secondary_window.exec_()
 
     #Llenar la tabla
     def fillTable(self, list):
@@ -194,8 +210,10 @@ class WindowAdd(QDialog):
         #Widgets de la ventana
         labelChannel = QLabel("Channel name:")
         self.inputChannel = QLineEdit()
+        self.inputChannel.setPlaceholderText("Example")
         labelLink = QLabel("Channel URL:")
         self.inputLink = QLineEdit()
+        self.inputLink.setPlaceholderText("https://www.youtube.com/@Example")
         labelCategory = QLabel("Channel category:")
         self.comboCategory = QComboBox()
         self.comboCategory.addItems(categoryList) #Añadimos la lista de las categorías al comboBox
@@ -225,12 +243,24 @@ class WindowAdd(QDialog):
         #Validamos la entrada del link
         urlYouTube = re.compile(r'^https://www.youtube.com/*')
         if re.match(urlYouTube, link):
-            newChannel=[channel, link, category]
-            channelList.append(newChannel) #Agregamos el canal a la lista mediante los datos obtenidos
-            addChannelInTxt(newChannel) #Agregamos el canal al archivo de texto
-            window.tableWidget.setRowCount(0) #Limpiar tabla
-            window.fillTable(channelList) #Llenar nuevamente
-            self.close()
+            notRepeted=True
+            for channelIn in channelList:
+                if((link==channelIn[1])):
+                    notRepeted=False
+                    msgBox=QMessageBox()
+                    msgBox.setIcon(QMessageBox.Information)
+                    msgBox.setGeometry(350, 350, 0, 0)
+                    msgBox.setText('This URL already exists')
+                    msgBox.setStandardButtons(QMessageBox.Close)
+                    msgBox.setWindowModality(Qt.ApplicationModal)
+                    msgBox.exec_()
+            if notRepeted:
+                newChannel=[channel, link, category]
+                channelList.append(newChannel) #Agregamos el canal a la lista mediante los datos obtenidos
+                addChannelInTxt(newChannel) #Agregamos el canal al archivo de texto
+                window.tableWidget.setRowCount(0) #Limpiar tabla
+                window.fillTable(channelList) #Llenar nuevamente
+                self.close()
         else:
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
@@ -255,6 +285,7 @@ class WindowSearch(QDialog):
         #Widgets de la ventana
         labelChannel=QLabel("What's the channel name that you want to search?")
         self.inputChannel=QLineEdit()
+        self.inputChannel.setPlaceholderText("Enter the name of the channel to search")
         boton=QPushButton("Search", self)
         boton.clicked.connect(self.searchRow)
 
@@ -334,6 +365,103 @@ class WindowFilter(QDialog):
                 window.tableWidget.setRowCount(0) #Limpiar tabla
                 window.fillTable(filtredList) #Poner en la tabla el canal
                 self.close()
+
+#Clase de la ventana para editar canal
+class WindowEdit(QDialog):
+    def __init__(self, indexChannel):
+        super().__init__()
+
+        self.editList=channelList[indexChannel] #Lista que editaremos, la cual se remplazará al final
+        self.indexChannel=indexChannel #Establecemos este dato en la instancia para acceder desde editRow()
+
+        #Configuración de la ventana
+        self.setWindowTitle('Edit channel')
+        self.setGeometry(100, 100, 600, 300)
+        self.setFixedSize(600, 300)
+        self.move(300, 200)
+        self.setWindowIcon(QtGui.QIcon('img/fortilogo.png'))
+        
+        #Widgets de la ventana
+        labelChannel=QLabel("New channel name:")
+        self.inputChannel=QLineEdit()
+        self.inputChannel.setPlaceholderText("Example")
+        self.inputChannel.setText(self.editList[0])
+        labelLink=QLabel("New channel URL:")
+        self.inputLink=QLineEdit()
+        self.inputLink.setPlaceholderText("https://www.youtube.com/@Example")
+        self.inputLink.setText(self.editList[1])
+        labelCategory=QLabel("New channel category:")
+        self.comboCategory=QComboBox()
+        self.comboCategory.addItems(categoryList) #Añadimos la lista de las categorías al comboBox
+        currentIndex=categoryList.index(self.editList[2])
+        self.comboCategory.setCurrentIndex(currentIndex)
+        boton=QPushButton("Add edit", self)
+        boton.clicked.connect(self.editRow)
+
+        # Agregamos los widgets al layout vertical (diseño vertical)
+        layout=QVBoxLayout()
+        layout.addWidget(labelChannel)
+        layout.addWidget(self.inputChannel)
+        layout.addWidget(labelLink)
+        layout.addWidget(self.inputLink)
+        layout.addWidget(labelCategory)
+        layout.addWidget(self.comboCategory)
+        layout.addWidget(boton)
+        self.setLayout(layout) #Establecer layout en la ventana
+
+        self.inputChannel.setFocus() #Establece foco en el input
+        self.inputChannel.selectAll() #Selecciona todo el texto del input
+    
+    #Método para añadir funcionalidad al botón de añadir
+    def editRow(self):
+        #Obtenemos los datos de los widgets
+        channel=self.inputChannel.text()
+        link=self.inputLink.text()
+        category=self.comboCategory.currentText()
+
+        #Validamos la entrada del link
+        urlYouTube = re.compile(r'^https://www.youtube.com/*')
+        if re.match(urlYouTube, link):
+            notRepeted=True
+            for channelIn in channelList:
+                if((link==channelIn[1])&(channelList.index(channelIn)==self.indexChannel)):
+                    pass
+                if((link==channelIn[1])&(channelList.index(channelIn)!=self.indexChannel)):
+                    notRepeted=False
+                    msgBox=QMessageBox()
+                    msgBox.setIcon(QMessageBox.Information)
+                    msgBox.setGeometry(350, 350, 0, 0)
+                    msgBox.setText('This URL already exists')
+                    msgBox.setStandardButtons(QMessageBox.Close)
+                    msgBox.setWindowModality(Qt.ApplicationModal)
+                    msgBox.exec_()
+            if notRepeted:
+                newChannel=[channel, link, category]
+                if(newChannel==self.editList):
+                    msgBox=QMessageBox()
+                    msgBox.setIcon(QMessageBox.Information)
+                    msgBox.setGeometry(350, 350, 0, 0)
+                    msgBox.setText('¡No channel changes applied!')
+                    msgBox.setStandardButtons(QMessageBox.Close)
+                    msgBox.setWindowModality(Qt.ApplicationModal)
+                    msgBox.exec_()
+                else:
+                    #Remplazamos la lista del índice con los datos obtenidos
+                    channelList[self.indexChannel][0]=channel
+                    channelList[self.indexChannel][1]=link
+                    channelList[self.indexChannel][2]=category
+                    window.tableWidget.setRowCount(0) #Limpiar tabla
+                    overrideTxt()
+                    window.fillTable(channelList) #Llenar nuevamente
+                    self.close()
+        else:
+            msgBox=QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setGeometry(350, 350, 0, 0)
+            msgBox.setText('The link must be from youtube.com. It should start like this:\n"https://www.youtube.com/"')
+            msgBox.setStandardButtons(QMessageBox.Close)
+            msgBox.setWindowModality(Qt.ApplicationModal)
+            msgBox.exec_()
 
 #Estas 4 líneas hacen posible que se ejecute y muestre la ventana
 if __name__ == '__main__': #variable "name" establecida como "main" (línea no obligatoria)
