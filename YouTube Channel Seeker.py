@@ -91,14 +91,20 @@ class Window(QMainWindow):
         self.addRowButton.clicked.connect(self.showWindowAdd)
 
         #El botón de buscar
-        self.addRowButton = QPushButton('Search channel', self.centralWidget)
-        self.addRowButton.setGeometry(QRect(200, 20, 160, 30))
-        self.addRowButton.clicked.connect(self.showWindowSearch)
+        self.searchButton = QPushButton('Search channel', self.centralWidget)
+        self.searchButton.setGeometry(QRect(200, 20, 160, 30))
+        self.searchButton.clicked.connect(self.showWindowSearch)
 
         #El botón de filtrar
-        self.addRowButton = QPushButton('Filter by category', self.centralWidget)
-        self.addRowButton.setGeometry(QRect(380, 20, 160, 30))
-        self.addRowButton.clicked.connect(self.showWindowFilter)
+        self.filterButton = QPushButton('Filter by category', self.centralWidget)
+        self.filterButton.setGeometry(QRect(380, 20, 160, 30))
+        self.filterButton.clicked.connect(self.showWindowFilter)
+
+        #El botón de llenar
+        self.fillButton = QPushButton('Fill table', self.centralWidget)
+        self.fillButton.setGeometry(QRect(560, 20, 160, 30))
+        self.fillButton.clicked.connect(lambda: self.tableWidget.setRowCount(0))
+        self.fillButton.clicked.connect(lambda: self.fillTable(channelList))
     
     #Funcion del doble click para que abra el link del canal
     def open_link(self, row, column):
@@ -206,6 +212,8 @@ class WindowAdd(QDialog):
         layout.addWidget(self.comboCategory)
         layout.addWidget(boton)
         self.setLayout(layout) #Establecer layout en la ventana
+
+        self.inputChannel.setFocus() #Establece foco en el input
     
     #Método para añadir funcionalidad al botón de añadir
     def addRow(self):
@@ -245,9 +253,9 @@ class WindowSearch(QDialog):
         self.setWindowIcon(QtGui.QIcon('img/fortilogo.png'))
         
         #Widgets de la ventana
-        labelChannel = QLabel("What's the channel name that you want to search?")
-        self.inputChannel = QLineEdit()
-        boton = QPushButton("Search", self)
+        labelChannel=QLabel("What's the channel name that you want to search?")
+        self.inputChannel=QLineEdit()
+        boton=QPushButton("Search", self)
         boton.clicked.connect(self.searchRow)
 
         # Agregamos los widgets al layout vertical (diseño vertical)
@@ -256,6 +264,8 @@ class WindowSearch(QDialog):
         layout.addWidget(self.inputChannel)
         layout.addWidget(boton)
         self.setLayout(layout) #Establecer layout en la ventana
+        
+        self.inputChannel.setFocus() #Establece foco en el input
     
     #Método para añadir funcionalidad al botón de buscar
     def searchRow(self):
