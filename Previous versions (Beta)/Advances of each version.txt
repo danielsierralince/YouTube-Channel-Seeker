@@ -28,3 +28,8 @@ v0.2.0: Added temporary texts to indicate the format or type of information the 
 v0.2.0: Added a second action when right-clicking a channel to allow editing, a window opens that auto-completes with current data
 v0.2.0: It is validated that the URL to be added or edited is not repeated
 -xxx-
+v0.3.0: The YouTube API (Google Cloud) connection module is implemented with the main function of obtaining subscriptions and logging into the browser
+v0.3.0: Added exception handling at two code points
+v0.3.0: Necessary requirements to implement the API in the GUI, the list and the .txt are managed
+v0.3.0: Fixed bugs in the search function
+-xxx-
