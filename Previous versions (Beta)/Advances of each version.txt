@@ -32,4 +32,6 @@ v0.3.0: The YouTube API (Google Cloud) connection module is implemented with the
 v0.3.0: Added exception handling at two code points
 v0.3.0: Necessary requirements to implement the API in the GUI, the list and the .txt are managed
 v0.3.0: Fixed bugs in the search function
--xxx-
+-xxx- FINAL VERSION
+v1.0: Added basic table visibility features
+v1.0: Added a dropdown button that allows you to check the columns that you want to display

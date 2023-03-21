@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QPushButton, QDialog, QV
                              QTableWidget, QLabel, QLineEdit, QComboBox, QTableWidgetItem, 
                              QAbstractItemView,QMessageBox, QMenu, QAction)
 from PyQt5.QtCore import QRect, Qt, QUrl
-from PyQt5.QtGui import QDesktopServices, QPixmap, QPalette, QColor
+from PyQt5.QtGui import QDesktopServices
 from APIconnection import get_subscriptions #Se importa el módulo de la API para obtener las suscripciones
 
 current_dir = os.getcwd() # Obtener la ruta de la carpeta actual
@@ -241,15 +241,12 @@ class Window(QMainWindow):
     
     #Abrir navegador si se confirma la accion
     def open_in_browser(self, button):
-        if button.text()=="&Yes":
-            subscriptions = get_subscriptions()
-            for subscription in subscriptions:
-                channelList.append(subscription)
-            overrideTxt()
-            self.tableWidget.setRowCount(0)
-            self.fillTable(channelList)
-        elif button.text()=="&No":
-            pass #Acción cancelada
+        subscriptions = get_subscriptions()
+        for subscription in subscriptions:
+            channelList.append(subscription)
+        overrideTxt()
+        self.tableWidget.setRowCount(0)
+        self.fillTable(channelList)
 
     #Mostrar ventana añadir
     def showWindowAdd(self):

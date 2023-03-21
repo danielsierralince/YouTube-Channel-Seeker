@@ -1,5 +1,7 @@
 import google_auth_oauthlib.flow
+from google_auth_oauthlib.flow import InstalledAppFlow
 import googleapiclient.discovery
+from googleapiclient.discovery import build
 import os
 
 os.chdir("YouTube Channel Seeker") #os.getcwd()
@@ -12,9 +14,9 @@ API_SERVICE_NAME="youtube"
 API_VERSION="v3"
 
 def get_authenticated_service():
-    flow=google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES) #Integra request y abre navegador para autenticarse con cuenta gmail
+    flow=InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES) #Integra request y abre navegador para autenticarse con cuenta gmail
     credentials=flow.run_local_server(port=0)
-    return googleapiclient.discovery.build(API_SERVICE_NAME, API_VERSION, credentials=credentials) #Retorna archivo con toda la información
+    return build(API_SERVICE_NAME, API_VERSION, credentials=credentials) #Retorna archivo con toda la información
 
 def get_subscriptions():
     youtube=get_authenticated_service()
