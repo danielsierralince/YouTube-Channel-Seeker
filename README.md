@@ -1,6 +1,8 @@
 # YouTube-Channel-Seeker
 YouTube Channel Seeker is a mini-proyect developed in Python, which implements a graphical interface (GUI) using PyQt5 library and a YouTubev3 API connection to Google Cloud. It's a tool that can create, read, update and delete (CRUD) a number of channels with some information such as name, link (URL) and category, which you can get from channels you're subscribe to. In addition, it implements other types of basic functionalities, such as validations, filters and exceptions, to give the user a better experience.
 
+Watch on YouTube: https://www.youtube.com/watch?v=Mf-WHOb8OIY
+
 ## Requirements
 
 You can run the following command in the console, after being located in the folder that contains the "requirements.txt" file.
